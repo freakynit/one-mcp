@@ -1,0 +1,5 @@
+[
+  { "name": "getUserProfile", "description": "Retrieves user profile information including email and preferences", "method": "GET", "path": "/api/v1/users/{userId}", "parameters": ["userId"] },
+  { "name": "createOrder", "description": "Creates a new order for purchasing products", "method": "POST", "path": "/api/v1/orders", "requestBody": {"items": "array", "total": "number"} },
+  { "name": "updateUserSettings", "description": "Updates user notification and privacy settings", "method": "PUT", "path": "/api/v1/users/{userId}/settings", "parameters": ["userId"] }
+]

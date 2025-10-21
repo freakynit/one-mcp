@@ -1,0 +1,7 @@
+__pycache__
+.vscode
+.idea
+.claude
+.trae
+logs
+spec_embeddings.json
