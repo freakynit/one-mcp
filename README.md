@@ -1,6 +1,6 @@
 # 🧠 one-mcp
 
-<WIP>
+> WIP
 
 
 ## 🚀 Overview
