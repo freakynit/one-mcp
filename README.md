@@ -151,6 +151,11 @@ To integrate with an MCP client:
 
 ---
 
+### Dev
+1. Create zip: `zip -r one-mcp.zip . -x "*.git/*" -x ".env" -x ".DS_Store" -x ".dockerignore" -x ".gitignore"`
+
+---
+
 ## 🧑‍💻 Contributing
 
 Contributions are welcome!
