@@ -5,17 +5,18 @@
 
 ## 🚀 Overview
 
-**one-mcp** is a lightweight **MCP (Model Context Protocol)** server built using **FastAPI** that enables intelligent specification management and semantic search for APIs.
-It allows you to upload, manage, and query API specifications using natural language — powered by modern embedding models via `sentence-transformers`.
+**one-mcp** is a lightweight **MCP (Model Context Protocol)** server built using **FastAPI** that enables intelligent tool management and semantic search for APIs.
+It allows you to upload, manage, and query API tools using natural language — powered by modern embedding models via `sentence-transformers`.
 
 ---
 
 ## ✨ Features
 
-* 🔍 **Semantic Search:** Find relevant API specs based on descriptive queries.
-* 📤 **Upload Specs:** Add new API specs via JSON body or file upload.
-* 🧾 **Spec Statistics:** Get insights on stored specifications.
-* 🧹 **Spec Management:** Clear, inspect, or modify your spec store easily.
+* 🔍 **Semantic Search:** Find relevant API tools based on descriptive queries.
+* 📤 **Upload Tools:** Add new API tools via JSON body or file upload.
+* 🗑️ **Delete Tools:** Remove specific tools by name (supports batch deletion).
+* 🧾 **Tool Statistics:** Get insights on stored tools.
+* 🧹 **Tool Management:** Clear, inspect, or modify your tool store easily.
 * ⚡ **FastAPI Backend:** High-performance, async-ready backend server.
 * 🤝 **MCP Compatibility:** Easily integrates with MCP-enabled clients and workflows.
 
@@ -29,8 +30,8 @@ one-mcp/
 ├── api.py              # API routes and endpoints
 ├── mcp_tools.py        # MCP tool handlers and utility functions
 ├── models.py           # Pydantic and data models
-├── spec_store.py       # In-memory or persistent store for specifications
-├── test_specs.json     # Sample specification dataset
+├── tools_store.py      # In-memory or persistent store for tools
+├── test_specs.json     # Sample tool dataset
 ├── CURLS.md            # Example cURL commands for testing API endpoints
 ├── requirements.txt    # Project dependencies
 └── README.md           # Project documentation (this file)
@@ -101,20 +102,28 @@ See full examples in [CURLS.md](./CURLS.md).
 curl http://localhost:8003/api/status
 ```
 
-#### Upload Specs via JSON
+#### Upload Tools via JSON
 
 ```bash
-curl -X POST http://localhost:8003/api/specs/upload-json \
+curl -X POST http://localhost:8003/api/tools/upload-json \
   -H "Content-Type: application/json" \
-  -d '{"specs": [{"name": "getUserProfile", "description": "Retrieves user profile"}]}'
+  -d '{"tools": [{"name": "getUserProfile", "description": "Retrieves user profile"}]}'
 ```
 
-#### Search for Similar Specs
+#### Search for Similar Tools
 
 ```bash
-curl -X POST http://localhost:8003/api/specs/search \
+curl -X POST http://localhost:8003/api/tools/search \
   -H "Content-Type: application/json" \
   -d '{"query": "how to get user info", "k": 3}'
+```
+
+#### Delete Specific Tools
+
+```bash
+curl -X DELETE http://localhost:8003/api/tools/delete \
+  -H "Content-Type: application/json" \
+  -d '{"tool_names": ["getUserProfile", "updateUserSettings"]}'
 ```
 
 All endpoints return structured JSON with similarity scores for search queries.

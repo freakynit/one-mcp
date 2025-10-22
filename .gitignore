@@ -4,4 +4,4 @@ __pycache__
 .claude
 .trae
 logs
-spec_embeddings.json
+tool_embeddings.json
