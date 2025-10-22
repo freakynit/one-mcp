@@ -81,7 +81,7 @@ python-multipart
 Start the FastAPI MCP server:
 
 ```bash
-python app.py --both --port 8003
+python app.py --transport stdio,http --port 8003
 ```
 
 By default, the server starts at:
@@ -140,9 +140,9 @@ To integrate with an MCP client:
     "test-mcp-server": {
       "command": "python",
       "args": [
-        "/path/to/one-mcp/app.py",
-        "--both",
-        "--port", "8000"
+        "/Users/nitinbansal/dev/gitlab/python/one-mcp/app.py",
+        "--transport", "stdio,http",
+        "--port", "8004"
       ]
     }
   }
