@@ -1,8 +1,5 @@
 # 🧠 one-mcp
 
-> WIP
-
-
 ## 🚀 Overview
 
 **one-mcp** is a lightweight **MCP (Model Context Protocol)** server built using **FastAPI** that enables intelligent tool management and semantic search for APIs.
