@@ -2,7 +2,17 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional
 import json
-from models import ToolsInput, SearchQuery, DeleteToolsInput
+
+from models import (
+    ToolsInput,
+    SearchQuery,
+    DeleteToolsInput,
+    SearchResult,
+    DeleteResult,
+    UploadResult,
+    StatsResult,
+    ClearResult,
+)
 from tools_store import get_store
 
 
@@ -17,25 +27,24 @@ def create_app(mcp, storage_path: str = "tool_embeddings.json"):
     def status():
         return {"status": "ok", "total_tools": len(store_instance.tools)}
 
-
     # Tool post endpoint to upload tools in JSON format
-    @api.post("/api/tools/upload-json")
+    @api.post("/api/tools/upload-json", response_model=UploadResult)
     async def upload_tools_json(tools_input: ToolsInput):
         tools = tools_input.tools
         if not tools:
             raise HTTPException(status_code=400, detail="No tools provided")
         initial_count = len(store_instance.tools)
         store_instance.add_tools(tools)
-        return {
-            "message": f"Successfully added {len(store_instance.tools) - initial_count} tools",
-            "total_tools": len(store_instance.tools)
-        }
-
+        added = len(store_instance.tools) - initial_count
+        return UploadResult(
+            message=f"Successfully added {added} tools",
+            total_tools=len(store_instance.tools),
+        )
 
     # Tool upload endpoint to upload tools in file format
-    @api.post("/api/tools/upload-file")
+    @api.post("/api/tools/upload-file", response_model=UploadResult)
     async def upload_tools_file(file: UploadFile = File(...)):
-        if not file.filename.endswith(".json"):
+        if not file.filename.lower().endswith(".json"):
             raise HTTPException(status_code=400, detail="Only .json files are supported")
         try:
             content = await file.read()
@@ -49,74 +58,69 @@ def create_app(mcp, storage_path: str = "tool_embeddings.json"):
 
         initial_count = len(store_instance.tools)
         store_instance.add_tools(tools)
-        return {
-            "message": f"Successfully added {len(store_instance.tools) - initial_count} tools",
-            "total_tools": len(store_instance.tools)
-        }
-
+        added = len(store_instance.tools) - initial_count
+        return UploadResult(
+            message=f"Successfully added {added} tools",
+            total_tools=len(store_instance.tools),
+        )
 
     # Tool search endpoint
-    @api.post("/api/tools/search")
+    @api.post("/api/tools/search", response_model=SearchResult)
     async def search_tools(query: SearchQuery):
         """
         Search for similar OpenAPI tools using natural language query.
         Returns top k most similar tools based on cosine similarity.
         """
         if not store_instance.tools:
-            return JSONResponse(
-                content={
-                    "message": "No tools available. Please upload tools first.", 
-                    "results": []
-                },
-                status_code=200
+            return SearchResult(
+                query=query.query,
+                k=query.k,
+                total_results=0,
+                results=[],
             )
-        
+
         results = store_instance.search(query.query, query.k)
-        
-        return {
-            "query": query.query,
-            "k": query.k,
-            "total_results": len(results),
-            "results": results
-        }
+        return SearchResult(
+            query=query.query,
+            k=query.k,
+            total_results=len(results),
+            results=results,
+        )
 
     # Get stats endpoint
-    @api.get("/api/tools/stats")
+    @api.get("/api/tools/stats", response_model=StatsResult)
     async def get_stats():
         """Get statistics about stored tools"""
-        return {
-            "total_tools": len(store_instance.tools),
-            "storage_path": str(store_instance.storage_path.absolute()),
-            "model": store_instance.model_name
-        }
+        return StatsResult(
+            total_tools=len(store_instance.tools),
+            storage_path=str(store_instance.storage_path.absolute()),
+            model=store_instance.model_name,
+        )
 
     # Clear tools endpoint
-    @api.delete("/api/tools/clear")
+    @api.delete("/api/tools/clear", response_model=ClearResult)
     async def clear_tools():
         """Clear all stored tools"""
         store_instance.tools = []
         store_instance.embeddings = None
         store_instance.save_to_disk()
-        return {"message": "All tools cleared"}
+        return ClearResult(message="All tools cleared")
 
     # Delete specific tools endpoint
-    @api.delete("/api/tools/delete")
+    @api.delete("/api/tools/delete", response_model=DeleteResult)
     async def delete_tools(delete_input: DeleteToolsInput):
         """Delete specific tools by their names"""
         if not delete_input.tool_names:
             raise HTTPException(status_code=400, detail="No tool names provided")
-        
+
         result = store_instance.delete_tools(delete_input.tool_names)
-        
-        if result["deleted_count"] == 0 and result["not_found"]:
-            return JSONResponse(
-                content=result,
-                status_code=404
-            )
-        
-        return result
+        return DeleteResult(
+            deleted_count=result["deleted_count"],
+            not_found=result["not_found"],
+            remaining_tools=result["remaining_tools"],
+        )
 
     # Mount MCP at /mcp
     api.mount("/mcp", mcp.http_app())
-    
+
     return api

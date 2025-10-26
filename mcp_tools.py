@@ -11,20 +11,8 @@ store = get_store()
 
 @mcp.tool
 def echo_message(message: str) -> str:
-    """Echo back the given message"""
+    """Echo back the given message (Just for testing MCP integration)"""
     return message
-
-
-@mcp.tool
-def add(a: int, b: int) -> int:
-    """Adds two integer numbers together."""
-    return a + b
-
-
-@mcp.tool
-def multiply(a: int, b: int) -> int:
-    """Multiplies two integer numbers together."""
-    return a * b
 
 @mcp.tool
 async def search_tool(query: SearchQuery) -> SearchResult:

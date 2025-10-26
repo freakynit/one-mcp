@@ -4,7 +4,9 @@ import numpy as np
 import json
 from typing import List, Dict, Any
 from pathlib import Path
+from logging_setup import get_logger
 
+logger = get_logger(__name__)
 tools_stores = {}
 
 class ToolsStore:
@@ -135,9 +137,9 @@ class ToolsStore:
                 with open(self.storage_path, 'r') as f:
                     self.tools = json.load(f)
                 self._update_embeddings_matrix()
-                print(f"Loaded {len(self.tools)} tools from disk")
+                logger.info(f"Loaded {len(self.tools)} tools from disk")
             except (json.JSONDecodeError, Exception) as e:
-                print(f"Error loading tools from disk: {e}")
+                logger.error(f"Error loading tools from disk: {e}")
                 self.tools = []
 
 

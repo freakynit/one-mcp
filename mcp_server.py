@@ -1,55 +1,17 @@
-import argparse
 import asyncio
-import logging
 import signal
 import sys
 import threading
 import time
-from dataclasses import dataclass
-from typing import Set
-
 import uvicorn
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Import with error handling
-try:
-    from api import create_app
-    from mcp_tools import mcp
-except ImportError as e:
-    logger.error(f"Failed to import required modules: {e}")
-    sys.exit(1)
+from logging_setup import get_logger
+from config import ServerConfig
+from api import create_app
+from mcp_tools import mcp
 
 
-@dataclass
-class ServerConfig:
-    """Configuration for the MCP server."""
-    transports: Set[str]
-    port: int
-    host: str
-    storage_path: str
-    
-    @classmethod
-    def from_args(cls, args) -> 'ServerConfig':
-        """Create configuration from command line arguments."""
-        # Normalize and validate transports
-        raw_transports = [t.strip().lower() for t in args.transport.split(",")]
-        valid_transports = {"stdio", "http"}
-        invalid = [t for t in raw_transports if t not in valid_transports]
-        if invalid:
-            raise ValueError(f"Invalid transport(s): {', '.join(invalid)}. Choose from {', '.join(valid_transports)}.")
-        
-        return cls(
-            transports=set(raw_transports),
-            port=args.port,
-            host=args.host,
-            storage_path=args.storage_path
-        )
+logger = get_logger(__name__)
 
 
 class MCPServer:
@@ -175,71 +137,3 @@ class MCPServer:
             self.http_thread.join(timeout=5.0)
             if self.http_thread.is_alive():
                 logger.warning("HTTP server thread did not terminate gracefully")
-
-
-def create_argument_parser() -> argparse.ArgumentParser:
-    """Create and configure the argument parser."""
-    parser = argparse.ArgumentParser(description="Run FastMCP server with transport option.")
-    parser.add_argument(
-        "--transport", 
-        default="stdio", 
-        help="Comma-separated transports to enable (choices: stdio, http; default: stdio)"
-    )
-    parser.add_argument(
-        "--port", 
-        type=int, 
-        default=8000, 
-        help="Port number for the server (default: 8000)"
-    )
-    parser.add_argument(
-        "--host", 
-        default="0.0.0.0", 
-        help="Host to bind to (default: 0.0.0.0)"
-    )
-    parser.add_argument(
-        "--storage_path", 
-        default="tool_embeddings.json", 
-        help="Path to store tool embeddings (default: tool_embeddings.json)"
-    )
-    return parser
-
-
-# Create the app instance for uvicorn
-config = None
-app = None
-
-def initialize_app():
-    """Initialize the app for uvicorn when imported."""
-    global config, app
-    if app is None:
-        # Use default config when imported as module
-        default_args = argparse.Namespace(
-            transport="stdio",
-            port=8000,
-            host="0.0.0.0",
-            storage_path="tool_embeddings.json"
-        )
-        config = ServerConfig.from_args(default_args)
-        try:
-            app = create_app(mcp, config.storage_path)
-        except Exception as e:
-            logger.error(f"Failed to initialize app: {e}")
-            raise
-
-# Initialize app for uvicorn
-initialize_app()
-
-
-if __name__ == "__main__":
-    parser = create_argument_parser()
-    args = parser.parse_args()
-    
-    try:
-        config = ServerConfig.from_args(args)
-        server = MCPServer(config)
-        server.run()
-    except ValueError as e:
-        parser.error(str(e))
-    except Exception as e:
-        logger.error(f"Failed to start server: {e}")
-        sys.exit(1)
